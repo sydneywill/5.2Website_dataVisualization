@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let the Church Say Amen!</title>
+
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .word-cloud {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+        }
+
+        .prompt-box {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .input-text {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .submit-button {
+            padding: 8px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="wordCloud" class="word-cloud"></div>
+        <div class="prompt-box" id="prompt">When I say 'God is', you say...</div>
+
+        <form id="wordForm" class="input-form">
+            <input type="text" id="wordInput" class="input-text" placeholder="Type your response...">
+            <button type="submit" class="submit-button">Add Word</button>
+        </form>
+    </div>
+
+    <!-- loading d3.js-->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+
+    <script>
+        const prompts = [
+            "When I say 'God is', you say...",
+            "When I say 'Hallelujah', you say...",
+            "When I say 'Jesus', you say...",
+            "When I say 'Amen', you say..."
+        ];
+
+        let words = [
+            { text: 'Amen', size: 60 },
+            { text: 'Hallelujah', size: 55 },
+            { text: 'Jesus', size: 50 },
+            { text: 'Lord', size: 45 },
+            { text: 'God', size: 45 }
+        ];
+
+        const colors = ['#B8860B', '#2563eb', '#800000'];
+        let colorIndex = 0;
+
+        // function to update word cloud
+        function updateWordCloud() {
+            const layout = d3.layout.cloud()
+                .size([800, 400])
+                .words(words.map(function(d) { return { text: d.text, size: d.size }; }))
+                .padding(10)
+                .fontSize(function(d) { return d.size; })
+                .on("end", draw);
+            
+            layout.start();
+        }
+
+        // function to draw the word cloud using D3
+        function draw(words) {
+            d3.select("#wordCloud").html("");  // Clear previous SVG
+            const svg = d3.select("#wordCloud").append("svg")
+                .attr("width", 800)
+                .attr("height", 400)
+                .append("g")
+                .attr("transform", "translate(400,200)");
+
+            svg.selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .style("font-size", function(d) { return d.size + "px"; })
+                .style("fill", function() { 
+                    colorIndex = (colorIndex + 1) % colors.length; 
+                    return colors[colorIndex]; 
+                })
+                .attr("text-anchor", "middle")
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) { return d.text; });
+        }
+
+        // function to update the prompt
+        function updatePrompt() {
+            const promptElement = document.getElementById('prompt');
+            promptElement.textContent = prompts[Math.floor(Math.random() * prompts.length)];
+        }
+
+        // handle form submission to add new words
+        document.getElementById('wordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('wordInput');
+            const text = input.value.trim();
+
+            if (text) {
+                words.push({ text: text, size: 40 + Math.random() * 20 });
+                input.value = '';
+                updateWordCloud();
+                updatePrompt();
+            }
+        });
+
+        // initial render of the word cloud
+        updateWordCloud();
+    </script>
+</body>
+</html>
